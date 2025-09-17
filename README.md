@@ -44,6 +44,9 @@ a3techverse-test/
     <li>Run migrations:
       <pre>php artisan migrate</pre>
     </li>
+    <li>Run Product Seeder
+      <pre>php artisan db:seed --class=ProductSeeder</pre>
+    </li>
     <li>Serve the backend API:
       <pre>php artisan serve</pre>
       By default: <a href="http://127.0.0.1:8000">http://127.0.0.1:8000</a>
