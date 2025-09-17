@@ -147,11 +147,15 @@ export default function Products() {
     </button>
     <button
     type="button"
-    onClick={() => fetchProducts()}
+    onClick={() => {
+      setFilters({ name: "", min_price: "", max_price: "" });
+      fetchProducts();
+    }}
     className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
     >
     Reset
     </button>
+    
     </form>
     
     {loading ? (
