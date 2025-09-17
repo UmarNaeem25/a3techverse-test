@@ -9,7 +9,8 @@ class ProductController extends Controller
 {
     public function index()
     {
-        return response()->json(Product::all());
+        $products = Product::paginate(5);
+        return response()->json($products);
     }
     
     public function store(Request $request)
@@ -19,7 +20,12 @@ class ProductController extends Controller
             'price' => 'required|numeric|min:1',
         ]);
         
-        $product = Product::create($request->all());
+        $product = Product::create([
+            'name' => $request->name,
+            'description' => $request->description ?? '',
+            'price' => $request->price,
+        ]);
+        
         return response()->json($product, 201);
     }
     
@@ -34,7 +40,7 @@ class ProductController extends Controller
         
         $updated = Product::where('id', $request->id)->update([
             'name' => $request->name,
-            'description' => $request->description,
+            'description' => $request->description ?? '',
             'price' => $request->price,
         ]);
         
@@ -54,7 +60,7 @@ class ProductController extends Controller
     }
     
     public function search(Request $request)
-    {   
+    {
         $query = Product::query();
         
         if ($request->filled('name')) {
@@ -67,6 +73,9 @@ class ProductController extends Controller
             $query->where('price', '<=', $request->max_price);
         }
         
-        return response()->json($query->get(), 201);
+        $products = $query->paginate(5);
+        
+        return response()->json($products);
     }
 }
+

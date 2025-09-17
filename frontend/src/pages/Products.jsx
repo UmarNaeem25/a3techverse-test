@@ -10,16 +10,22 @@ export default function Products() {
     min_price: "",
     max_price: "",
   });
+  const [pagination, setPagination] = useState({ current_page: 1, last_page: 1 });
   
   const token = localStorage.getItem("token");
   
-  const fetchProducts = async () => {
+  const fetchProducts = async (page = 1) => {
     try {
       setLoading(true);
       const response = await api.get("/products", {
         headers: { Authorization: `Bearer ${token}` },
+        params: { page },
       });
-      setProducts(Array.isArray(response.data) ? response.data : []);
+      setProducts(Array.isArray(response.data.data) ? response.data.data : []);
+      setPagination({
+        current_page: response.data.current_page,
+        last_page: response.data.last_page,
+      });
     } catch (error) {
       Swal.fire("Error", "Failed to fetch products", "error");
       setProducts([]);
@@ -28,24 +34,41 @@ export default function Products() {
     }
   };
   
+  const searchProducts = async (e, page = 1) => {
+    e?.preventDefault();
+    try {
+      const response = await api.get("/products/search", {
+        headers: { Authorization: `Bearer ${token}` },
+        params: { ...filters, page },
+      });
+      setProducts(Array.isArray(response.data.data) ? response.data.data : []);
+      setPagination({
+        current_page: response.data.current_page,
+        last_page: response.data.last_page,
+      });
+    } catch (error) {
+      Swal.fire("Error", "Search failed", "error");
+      setProducts([]);
+    }
+  };
+  
   const updateProduct = async (product) => {
     const { value: formValues } = await Swal.fire({
-      title: 'Update Product',
+      title: "Update Product",
       html:
       `<input id="swal-id" type="hidden" value="${product.id}">` +
-      `<input id="swal-name" class="swal2-input" placeholder="Name" value="${product.name}">` +
-      `<input id="swal-description" class="swal2-input" placeholder="Description" value="${product.description || ''}">` +
-      `<input id="swal-price" class="swal2-input" type="number" placeholder="Price" value="${product.price}">`,
+      `<input id="swal-name" class="swal2-input" placeholder="Name" value="${product.name}" style="width: 100%; max-width: 100%; box-sizing: border-box;">` +
+      `<textarea id="swal-description" class="swal2-textarea" placeholder="Description" style="width: 100%; max-width: 100%; box-sizing: border-box; min-height: 80px; resize: vertical;">${product.description || ''}</textarea>` +
+      `<input id="swal-price" class="swal2-input" type="number" placeholder="Price" value="${product.price}" style="width: 100%; max-width: 100%; box-sizing: border-box;">`
+      ,
       focusConfirm: false,
       showCancelButton: true,
-      preConfirm: () => {
-        return {
-          id: document.getElementById('swal-id').value,
-          name: document.getElementById('swal-name').value,
-          description: document.getElementById('swal-description').value,
-          price: document.getElementById('swal-price').value,
-        };
-      },
+      preConfirm: () => ({
+        id: document.getElementById("swal-id").value,
+        name: document.getElementById("swal-name").value,
+        description: document.getElementById("swal-description").value,
+        price: document.getElementById("swal-price").value,
+      }),
     });
     
     if (!formValues) return;
@@ -54,25 +77,10 @@ export default function Products() {
       await api.put(`/products/${product.id}`, formValues, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      Swal.fire('Success', 'Product updated successfully', 'success');
-      fetchProducts();
+      Swal.fire("Success", "Product updated successfully", "success");
+      fetchProducts(pagination.current_page);
     } catch (error) {
-      Swal.fire('Error', 'Failed to update product', 'error');
-    }
-  };
-  
-  
-  const searchProducts = async (e) => {
-    e.preventDefault();
-    try {
-      const response = await api.get("/products/search", {
-        headers: { Authorization: `Bearer ${token}` },
-        params: filters,
-      });
-      setProducts(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      Swal.fire("Error", "Search failed", "error");
-      setProducts([]);
+      Swal.fire("Error", "Failed to update product", "error");
     }
   };
   
@@ -92,7 +100,7 @@ export default function Products() {
         headers: { Authorization: `Bearer ${token}` },
       });
       Swal.fire("Deleted!", "Product deleted successfully.", "success");
-      fetchProducts();
+      fetchProducts(pagination.current_page);
     } catch (error) {
       Swal.fire("Error", "Failed to delete product", "error");
     }
@@ -139,7 +147,7 @@ export default function Products() {
     </button>
     <button
     type="button"
-    onClick={fetchProducts}
+    onClick={() => fetchProducts()}
     className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
     >
     Reset
@@ -151,6 +159,7 @@ export default function Products() {
     ) : products.length === 0 ? (
       <p>No products found.</p>
     ) : (
+      <>
       <div className="overflow-x-auto bg-white shadow rounded">
       <table className="w-full border-collapse">
       <thead className="bg-gray-200">
@@ -183,12 +192,30 @@ export default function Products() {
         Delete
         </button>
         </td>
-        
         </tr>
       ))}
       </tbody>
       </table>
       </div>
+      
+      <div className="mt-4 flex justify-center gap-2">
+      <button
+      disabled={pagination.current_page <= 1}
+      onClick={() => fetchProducts(pagination.current_page - 1)}
+      className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+      >
+      Prev
+      </button>
+      <span className="px-4 py-2">{pagination.current_page} / {pagination.last_page}</span>
+      <button
+      disabled={pagination.current_page >= pagination.last_page}
+      onClick={() => fetchProducts(pagination.current_page + 1)}
+      className="px-4 py-2 bg-gray-300 rounded disabled:opacity-50"
+      >
+      Next
+      </button>
+      </div>
+      </>
     )}
     </div>
   );
