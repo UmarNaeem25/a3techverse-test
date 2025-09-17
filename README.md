@@ -35,6 +35,9 @@ a3techverse-test/
     <li>Install PHP dependencies:
       <pre>composer install</pre>
     </li>
+    <li>
+      <pre>Create database on phpmyadmin</pre>
+    </li>
     <li>Copy <code>.env.example</code> to <code>.env</code> and configure database settings:
       <pre>cp .env.example .env</pre>
     </li>
@@ -65,6 +68,7 @@ a3techverse-test/
   <ol>
     <li>Open the frontend URL in your browser.</li>
     <li>Register a new user, login, and perform CRUD operations on products.</li>
+    <li>Search functionality is implemented using name, max price and min price as the filters</li>
     <li>API calls are authenticated using Laravel Sanctum with Bearer tokens.</li>
   </ol>
 
